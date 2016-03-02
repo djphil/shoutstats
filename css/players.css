@@ -1,0 +1,19 @@
+audio::-webkit-media-controls-panel
+{
+    background-color: #f8f8f8;
+    border: 1px solid #ccc;
+}
+
+audio::-webkit-media-controls-timeline,
+audio::-webkit-media-controls-volume-slider
+{
+    background-color: #ddd;
+}
+
+audio::-webkit-media-controls-current-time-display,
+audio::-webkit-media-controls-time-remaining-display
+{
+    color: #555;
+}
+
+/*audio {width: 46px;}*/
