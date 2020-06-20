@@ -81,18 +81,17 @@
         $ip = isset($val['ip']) ? $val['ip'] : "localhost";
         $port = isset($val['port']) ? $val['port'] : 8000;
         $sid = isset($val['sid']) ? "?sid=".$val['sid'] : "";
-        // $mount = isset($val['mount']) ? $val['mount'] : ""; // TODO
         $type = isset($val['type']) ? $val['type'] : "mp3";
 
         $audio = "audio/mpeg";
         if (strpos($type, 'ogg') == true) $audio = "audio/ogg";
 
         $buffer = socket_get_7html($ip, $port, $sid);
-        $listeners	= isset($buffer[0]) ? $buffer[0] : 0; // CURRENTLISTENERS
-        $status		= isset($buffer[1]) ? $buffer[1] : 0; // STREAMSTATUS
+        $listeners  = isset($buffer[0]) ? $buffer[0] : 0; // CURRENTLISTENERS
+        $status     = isset($buffer[1]) ? $buffer[1] : 0; // STREAMSTATUS
         $peak       = isset($buffer[2]) ? $buffer[2] : 0; // PEAKLISTENERS
         $max        = isset($buffer[3]) ? $buffer[3] : 0; // MAXLISTENERS
-        $unique    	= isset($buffer[4]) ? $buffer[4] : 0; // UNIQUELISTENERS
+        $unique     = isset($buffer[4]) ? $buffer[4] : 0; // UNIQUELISTENERS
         $bitrate    = isset($buffer[5]) ? $buffer[5] : 0; // BITRATE
         $song       = isset($buffer[6]) ? $buffer[6] : 0; // SONGTITLE
 
@@ -107,7 +106,6 @@
             else $class = "progress-bar-danger";
         }
 
-        // if ($failed) $status = null; // TODO 
         if ($listeners >= $max || !$status) $panel_class = 'danger';
         $status_class = $status ? "success" : "danger";
         $updown = $status ? "up" : "down";
