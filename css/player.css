@@ -2,13 +2,13 @@
 
 audio
 {
-	width: 250px;
-	height: 40px;
-	background-color: #eee;
-	border: 0px solid #ccc;
-	-webkit-border-radius: 10px;
+    width: 250px;
+    height: 40px;
+    background-color: #eee;
+    border: 0px solid #ccc;
+    -webkit-border-radius: 10px;
        -moz-border-radius: 10px;
-	        border-radius: 10px;
+            border-radius: 10px;
 }
 
 audio::-webkit-media-controls-panel {background-color: #EEEEEE;}
