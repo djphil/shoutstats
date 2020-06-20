@@ -1,18 +1,22 @@
 <?php
-$title      = "Shoutcast Multi Server Statistics v0.1";
-$refresh    = "300";
-$timeout    = "1";
-$demo       = true;
-$theme      = true;
-$mini       = false;
-$ip[1]      = "sun.m2stream.fr"; 
-$port[1]    = "443";
-$ip[2]      = "94.176.104.15";
-$port[2]    = "8128";
-$ip[3]      = "uk1.internet-radio.com";
-$port[3]    = "8106";
-$ip[4]      = "live.nsbradio.co.uk";
-$port[4]    = "8904";
-$ip[5]      = "live140.impek.com";
-$port[5]    = "9088";
+session_start();
+header('Content-Type: text/html; charset=utf-8');
+ini_set('magic_quotes_gpc', 0);
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+$microtime = microtime(true); 
+
+$title = "Shoutcast Multi Server Statistics";
+$version = 0.2;
+$lisense = "CC-BY-NC-SA 4.0";
+$refresh = 300/10;
+$timeout = 1;
+$theme = true;
+$demo = false;
+$limit = 250;
+
+$panel_class = 'default';
+$display_footer = true;
+$display_ribbon = true;
+$github_url = "https://github.com/djphil/shoutstats";
 ?>

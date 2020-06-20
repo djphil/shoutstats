@@ -1,7 +1,0 @@
-
-INSTALL:
-========
-
-Put valid Shoutcast Server V1 or V2 ip and port in the inc/config.php file
-
-Enjoy!

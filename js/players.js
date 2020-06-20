@@ -1,6 +1,6 @@
-$("audio").each(function() {
-  $(this).bind("play", stopAll);
-});
+/* player.js v0.1 by djphil (CC-BY-NC-SA 4.0) */
+
+$("audio").each(function() {$(this).bind("play", stopAll);});
 
 function stopAll(e) {
     var currentElementId=$(e.currentTarget).attr("id");

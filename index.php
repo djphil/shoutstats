@@ -1,200 +1,179 @@
-<?php
-require_once('inc/config.php');
-$servers = count($ip);
-$time = microtime(true);
-?>
-
+<?php include_once('inc/config.php'); ?>
+<?php include_once('inc/functions.php'); ?>
+<?php include_once('inc/servers.php'); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="<?php echo $osguide; ?>">
-    <meta name="author" content="djphil">
-    <link rel="icon" href="./img/favicon.ico">
-    <link rel="author" href="./inc/humans.txt" />
-
-    <?php
-    if ($refresh != "0") {echo "<meta http-equiv=\"refresh\" content=\"$refresh\">\n";}
-    echo '<title>'.$title.'</title>';
-    ?>
-
-    <link href="./css/bootstrap.min.css" rel="stylesheet">
-    <link href="./css/bootstrap-theme.min.css" rel="stylesheet">
-    <link href="./css/gh-fork-ribbon.min.css" rel="stylesheet">
-
-    <?php if ($mini == true) echo '<style>audio {width: 46px;}</style>'; ?>
-
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-        <script src="./js/html5shiv.min.js"></script>
-        <script src="./js/respond.min.js"></script>
-    <![endif]-->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title><?php echo $title.' v'.$version ?> by djphil (<?php echo $lisense ; ?>)</title>
+	<meta name="description" content="<?php echo $title.' v'.$version ?> by djphil (<?php echo $lisense ; ?>)">
+	<meta name="author" content="Philippe Lemaire (djphil)">
+	<link rel="icon" href="img/favicon.ico">
+	<link rel="author" href="inc/humans.txt" />
+	<?php if ($refresh > 0): ?>
+	<meta http-equiv="refresh" content="<?php echo $refresh; ?>">
+	<?php endif; ?>
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<?php if ($theme): ?>
+	<link href="css/bootstrap-theme.min.css" rel="stylesheet">
+	<?php endif; ?>
+	<link href="css/player.css" rel="stylesheet">
+	<?php if ($display_ribbon): ?>
+	<link href="css/gh-fork-ribbon.min.css" rel="stylesheet">
+	<?php endif; ?>
 </head>
-
 <body>
-
+<?php if ($display_ribbon): ?>
 <div class="github-fork-ribbon-wrapper left">
-    <div class="github-fork-ribbon">
-        <a href="https://github.com/djphil/shoutstats" target="_blank">Fork me on GitHub</a>
-    </div>
+	<div class="github-fork-ribbon">
+		<a href="<?php echo $github_url ?> " target="_blank">Fork me on GitHub</a>
+	</div>
 </div>
-
+<?php endif; ?>
 <div class="container">
-    <h1>
-        <a class="btn btn-primary pull-right" href="./" title="Refresh Stats">
-        <i class="glyphicon glyphicon-refresh"></i> Refresh</a>
-        <?php echo $title; ?>
-    </h1>
+	<h1>
+		<i class="glyphicon glyphicon-flash"></i> <?php echo $title.' v'.$version ?>
+		<span class="pull-right">
+			<a class="btn btn-primary btn-xsxs infos" href="#" title="Infos Stats">
+			<i class="glyphicon glyphicon-info-sign"></i> Infos</a>
+			<a class="btn btn-primary btn-xsxs" href="./" title="Refresh Stats">
+			<i class="glyphicon glyphicon-refresh"></i> Refresh</a>
+		</span>
+	</h1>
 
-    <?php
-    $i = 1;
-    while($i <= $servers)
-    {
-        $fp = @fsockopen($ip[$i], $port[$i], $errno, $errstr, $timeout);
+	<p class="datetime">
+		Live <span class="label label-warning">Shoutcast V1 & V2</span> 
+		Servers Statistics <span class="pull-right" id="date"></span>
+	</p>
 
-        if (!$fp) 
-        {
-            $error[$i] = 1;
-            $listeners[$i] = 0;
-            $datas[$i] = '<strong>Error:</strong> Connection refused, server down ...';
-            $stat[$i] = '<span class="label label-danger pull-right">OFFLINE</span>';
-        }
+	<div class="clearfix"></div>
 
-        else
-        {
-            fputs($fp, "GET /7.html HTTP/1.0\r\nUser-Agent: Mozilla\r\n\r\n");
+	<div class="panel panel-default" id="statistics">
+		<div class="panel-heading"></div>
+		<div class="panel-body text-center">
+			Total Servers: <span class="badge badge-default" id="total_servers">0</span> 
+			Server Failed: <span class="badge badge-default" id="servers_failed">0</span> 
+			Server Online: <span class="badge badge-default" id="servers_online">0</span> 
+			Total Listeners: <span class="badge badge-default" id="total_listeners">0</span> 
+			Total Uniques: <span class="badge badge-default" id="total_uniques">0</span> 
+			Total Peak's: <span class="badge badge-default" id="total_peaks">0</span>
+		</div>
+		<div class="panel-footer"></div>
+	</div>
 
-            while (!feof($fp)) 
-            {
-                $info = fgets($fp);
-            }
+	<?php
+	$total = count($servers);
+	$total_listeners = 0;
+	$total_uniques = 0;
+	$total_peaks = 0;
+	$failed = 0;
 
-            $stats = explode(',', strip_tags($info));
+	foreach($servers as $key => $val)
+	{
+		$audio	= "audio/mpeg";
+		$name	= isset($key) ? $key : "n/a";
+		$ip		= isset($val['ip']) ? $val['ip'] : "localhost";
+		$port	= isset($val['port']) ? $val['port'] : 8000;
+		$sid	= isset($val['sid']) ? "?sid=".$val['sid'] : null;
+		$type	= isset($val['type']) ? $val['type'] : "mp3";
 
-            if (empty($stats[1]))
-            {
-                $error[$i] = 1;
-                $listeners[$i] = 0;
-                $datas[$i] = '<strong>Error:</strong> There is no source connected ...';
-                $stat[$i] = '<span class="label label-danger pull-right">OFFLINE</span>';
-            }
+		if (strpos($type, 'ogg') == true) $audio = "audio/ogg";
+		$buffer = socket_get_7html($ip, $port, $sid);
 
-            else
-            {
-                if ($stats[1] == 1)
-                {
-                    $listeners[$i]  = $stats[0]; 
-                    $status[$i]     = $stats[1];
-                    $peak[$i]       = $stats[2];
-                    $max[$i]        = $stats[3];
-                    $bitrate[$i]    = $stats[5];
-                    $song[$i]       = $stats[6];
+		$listeners	= isset($buffer[0]) ? $buffer[0] : 0; // CURRENTLISTENERS
+		$status		= isset($buffer[1]) ? $buffer[1] : 0; // STREAMSTATUS
+		$peak       = isset($buffer[2]) ? $buffer[2] : 0; // PEAKLISTENERS
+		$max        = isset($buffer[3]) ? $buffer[3] : 0; // MAXLISTENERS
+		$unique    	= isset($buffer[4]) ? $buffer[4] : 0; // UNIQUELISTENERS
+		$bitrate    = isset($buffer[5]) ? $buffer[5] : 0; // BITRATE
+		$song       = isset($buffer[6]) ? $buffer[6] : 0; // SONGTITLE
 
-                    if ($song[$i] == "") $song[$i] = "Unknow ...";
-                    if ($stats[0] == $max[$i]) $datas[$i] .= '<div class="alert alert-danger">';
+		if ($max > 0) 
+		{
+			if ($demo && $max > 250) $max = $limit;
+			$pc = round(($listeners / $max * 100));
+			if ($pc >= -1 && $pc <= 19) $class = "progress-bar-default";
+			else if ($pc >= 20 && $pc <= 39) $class = "progress-bar-info";
+			else if ($pc >= 40 && $pc <= 59) $class = "progress-bar-success";
+			else if ($pc >= 60 && $pc <= 79) $class = "progress-bar-warning";
+			else if ($pc >= 80 && $pc <= 100) $class = "progress-bar-danger";
+			else $class = "progress-bar-danger";
+		}
 
-                    $datas[$i] .= "<strong>Status:</strong> Server is up at $bitrate[$i] kbps ";
-                    $datas[$i] .= "with $listeners[$i] of $max[$i] listeners (Peak: ".$peak[$i].")<br />";
-                    $datas[$i] .= "<strong>Current song:</strong> ".$song[$i];
+		if ($listeners >= $max || !$status) $panel_class = 'danger';
+		$status_class = $status ? "success" : "danger";
+		$updown = $status ? "up" : "down";
+		$status = $status ? "ONLINE" : "OFFLINE";
+		$url = "http://".$val['ip'].":".$val['port'];
 
-                    if ($status[$i] == 1) $stat[$i] = '<span class="label label-success pull-right">ONLINE</span>';
-                    else $stat[$i] = '<span class="label label-danger pull-right">OFFLINE</span>';
-                    if ($stats[0] == $max[$i]) $datas[$i] .= "</div>";
-                }
+		echo '<div class="panel panel-'.$panel_class.'">';
+		echo '<div class="panel-heading">';
+		echo '<b>'.$name.'</b> @ '.$val['ip'].':'.$val['port'];
+		echo ' <a class="" href="'.$url.'" target="_blank"><i class="glyphicon glyphicon-link"></i></a>';
+		echo '<div class="pull-right"><span class="label label-'.$status_class.'">'.$status.'</span></div>';
+		echo '<div class="clearfix"></div>';
+		echo '</div>';
 
-                else
-                {
-                    $error[$i] = 1;
-                    $listeners[$i] = 0;
-                    $datas[$i] = 'Error: Cannot get info from server ...';
-                    $stat[$i] = '<span class="label label-danger pull-right">OFFLINE</span>';
-                }
-            }
-        }
-        fclose($fp);
-        $i++;
-    }
+		echo '<div class="panel-body stretch">';
+		echo '<div class="progress">';
+		echo '<div class="progress-bar progress-bar-striped '.$class.'" role="progressbar" aria-valuenow="'.$pc.'" aria-valuemin="0" aria-valuemax="100" style="min-width: 8em; width: '.$pc.'%;">';
+		echo '<b>'.$pc.'% of capacity</b>';
+		echo '</div>';
+		echo '</div>';
 
-    $total_listeners = array_sum($listeners);
-    $time_difference = "0"; // BST: 1 GMT: 0
-    $time_difference = ($time_difference * 60 * 60);
-    $current_time = date("h:ia", time() + $time_difference);
-    $current_date = date("jS F, Y", time() + 0);
+		$url = "http://".$val['ip'].":".$val['port']."/;&type=".$type;
+		echo '<audio controls preload="none" id="player'.md5($key).'" class="pull-right">';
+		echo '<source src="'.$url.'" type="'.$audio.'">';
+		echo 'Your browser does not support the audio element.';
+		echo '</audio>';
 
-    echo '<p class="pull-right">There are <span class="badge badge-default">'.$total_listeners.'</span> listeners locked</p>';
-    echo "<p>Live <span class='label label-warning'>Shoutcast V1 - V2</span> statistics: $current_date, $current_time</p>\n";
+		echo '<b>Status:</b> Server is <b class="text-'.$status_class.'">'.$updown.' </b>at '.$bitrate.' kbps ';
+		echo 'with '.$listeners.' ('.$unique.' unique) / '.$max.' listeners (Peak: '.$peak.')<br />';
+		echo '<b>Current song:</b> '.$song;
+		echo '</div>';
+		if ($display_footer) echo '<div class="panel-footer"></div>';
+		echo '</div>';
 
-    $i = 1;
-    while($i <= $servers)
-    {
-        if ($max[$i] > 0) 
-        {
-            if ($max[$i] > 250 && $demo == true) $max[$i] = 250;
-            $percentage = round(($listeners[$i] / $max[$i] * 100));
-            if ($percentage >= -1 && $percentage <= 19) $class = "progress-bar-default";
-            else if ($percentage >= 20 && $percentage <= 39) $class = "progress-bar-info";
-            else if ($percentage >= 40 && $percentage <= 59) $class = "progress-bar-success";
-            else if ($percentage >= 60 && $percentage <= 79) $class = "progress-bar-warning";
-            else if ($percentage >= 80 && $percentage <= 100) $class = "progress-bar-danger";
-            else $class = "progress-bar-danger";
-        }
-
-        if ($stats[0] == $max[$i] || $error[$i] == "1") $panel_class = 'panel-danger alert-danger';
-        else $panel_class = 'panel-default';
-
-        if ($error[$i] <> 1)
-        {
-            $url = "http://".$ip[$i].':'.$port[$i];
-
-            echo '<div class="panel '.$panel_class.'">';
-            echo '<div class="panel-heading">';
-            echo '<strong>Server '.$i.':</strong> '.$ip[$i].':'.$port[$i].$stat[$i];
-            echo '</div>';
-            echo '<div class="panel-body">';
-            echo '<div class="progress">';
-            echo '<div class="progress-bar progress-bar-striped '.$class.'" role="progressbar" aria-valuenow="'.$percentage.'" aria-valuemin="0" aria-valuemax="100" style="min-width: 8em; width: '.$percentage.'%;">';
-            echo '<p>'.$percentage.'% of capacity</p>';
-            echo '</div>';
-            echo '</div>';
-            echo $datas[$i];
-            echo '</div>';
-            echo '<div class="panel-footer">';
-            echo '<a class="btn btn-default btn-sm pull-right" href="'.$url.'" target="_blank">Read more ...</a>';
-            echo '<audio controls preload="none" id="player'.$i.'">';
-            echo '<source src="'.$url.'/;&type=mp3" type="audio/mpeg">';
-            echo 'Your browser does not support the audio element.';
-            echo '</audio>';
-            echo '</div>';
-            echo '</div>';
-        }
-
-        else
-        {
-            echo '<div class="panel '.$panel_class.'">';
-            echo '<div class="panel-heading">';
-            echo '<strong>Server '.$i.':</strong> '.$ip[$i].':'.$port[$i].$stat[$i];
-            echo '</div>';
-            echo '<div class="panel-body">'.$datas[$i].'</div>';
-            echo '</div>';
-        }
-        ++$i;
-    }
-    echo "<strong>Page load time:</strong> ".round((microtime(true) - $time), 5)." seconds";
-    ?>
-
-    <footer class="footer">
-        <p class="text-muted">
-            <?php echo $title ?> by djphil (CC-BY-NC-SA 4.0)        
-            <a href="http://validator.w3.org/check?uri=referer" target="_blank">Valid W3C</a>
-        </p>
+		$total_listeners += intval($listeners);
+		$total_uniques += intval($unique); 
+		$total_peaks += intval($peak);
+	}
+	?>
+    <footer class="footer text-center">
+		<p class="text-muted">
+			<?php echo $title.' v'.$version ?> by djphil <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.fr" target="_blank">
+			<span class="label label-default"><?php echo $lisense; ?></span></a>
+			<br>Page load time: <?php echo round((microtime(true) - $microtime), 5); ?> seconds<br>
+			<a href="http://validator.w3.org/check?uri=referer" target="_blank">Valid W3C</a><br>
+		</p>
     </footer>
 </div>
 
-<script src="./js/jquery.min.js"></script>
-<script src="./js/bootstrap.min.js"></script>
-<script src="./js/players.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/players.js"></script>
+
+<script>
+$(document).ready(function() {
+	$("#statistics").hide();
+	$(".infos").click(function() {$("#statistics").toggle();});
+	$('#date').html(Date());
+	setInterval(function() {$('#date').html(Date());}, 1000);
+	var total_servers = <?php echo $total; ?>;
+	var servers_failed = <?php echo $failed; ?>;
+	var servers_online = <?php echo $total - $failed; ?>;
+	var total_listeners = <?php echo $total_listeners; ?>;
+	var total_uniques = <?php echo $total_uniques; ?>;
+	var total_peaks = <?php echo $total_peaks; ?>;
+	$('#total_servers').html(total_servers);
+	$('#servers_failed').html(servers_failed);
+	$('#total_listeners').html(total_listeners);
+	$('#servers_online').html(servers_online);
+	$('#total_uniques').html(total_uniques);
+	$('#total_peaks').html(total_peaks);
+});
+</script>
 </body>
 </html>
