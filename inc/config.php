@@ -9,12 +9,9 @@ $microtime = microtime(true);
 $title = "Shoutcast Multi Server Statistics";
 $version = 0.2;
 $lisense = "CC-BY-NC-SA 4.0";
-$refresh = 300/10;
+$refresh = 300;
 $timeout = 1;
 $theme = true;
-$demo = false;
-$limit = 250;
-
 $panel_class = 'default';
 $display_footer = true;
 $display_ribbon = true;
