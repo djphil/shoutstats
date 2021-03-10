@@ -101,6 +101,7 @@
             else $class = "progress-bar-danger";
         }
 
+        $panel_class = 'default';
         if ($listeners >= $max || !$status) $panel_class = 'danger';
         $status_class = $status ? "success" : "danger";
         $updown = $status ? "up" : "down";
